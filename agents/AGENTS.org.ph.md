@@ -8,5 +8,10 @@ Organization-specific defaults for this repository.
 
 ## Linear
 
-- https://linear.app/ is the issue tracker
-- use the `linear` cli to interact with it
+- https://linear.app/ is the issue / ticket tracker
+- use the `linear` cli tool to interact with it
+
+## Notion
+
+- https://notion.so keeps shared documentation
+- use the `notion-cli` cli tool to interact with it
