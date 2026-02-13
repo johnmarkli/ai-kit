@@ -8,6 +8,11 @@ profiles:
     extends: default
     files:
       - agents/AGENTS.org.ph.md
+  ph-all:
+    extends: ph
+    files:
+      - agents/AGENTS.lang.go.md
+      - agents/AGENTS.lang.ts.md
   ph-go:
     extends: ph
     files:
