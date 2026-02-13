@@ -1,0 +1,26 @@
+default_profile: default
+profiles:
+  default:
+    files:
+      - agents/AGENTS.core.md
+      - agents/AGENTS.tools.md
+  ph:
+    extends: default
+    files:
+      - agents/AGENTS.org.ph.md
+  ph-go:
+    extends: ph
+    files:
+      - agents/AGENTS.lang.go.md
+  ph-ts:
+    extends: ph
+    files:
+      - agents/AGENTS.lang.ts.md
+  go:
+    extends: default
+    files:
+      - agents/AGENTS.lang.go.md
+  ts:
+    extends: default
+    files:
+      - agents/AGENTS.lang.ts.md
