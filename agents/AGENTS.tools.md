@@ -54,6 +54,10 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
   - pipeline status/actions
 - Prefer `glab` over raw API calls for GitLab tasks.
 
+### Create a Pull Request (PR) or Merge Request (MR)
+- Ensure the working branch is updated with the latest main branch
+- Ensure the branch was not already merged - if it is, then create a new branch off of the latest main
+
 ## Decision rules
 
 - If task is file content inspection: `read`.
