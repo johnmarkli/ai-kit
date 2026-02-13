@@ -2,22 +2,26 @@
 set -euo pipefail
 
 # Usage examples:
-#   ./scripts/run-agent.sh --agent pi --task "debug failing tests" -- "help me fix this"
-#   ./scripts/run-agent.sh --agent claude --task "review auth flow" -- "review this diff"
-#   ./scripts/run-agent.sh --agent pi --dry-run --task "debug"
+#   ./scripts/run-agent.sh --agent pi -- "help me fix this"
+#   ./scripts/run-agent.sh --agent pi --profile go -- "fix failing go tests"
+#   ./scripts/run-agent.sh --agent claude --list-profiles
 #
 # Pass-through flags to underlying agent:
-#   ./scripts/run-agent.sh --agent pi -- "help me fix this" -- --model openai/gpt-4o --print
-#   ./scripts/run-agent.sh --agent claude -- "review this" -- --model sonnet --print
+#   ./scripts/run-agent.sh --agent pi --profile go -- "help" -- --model openai/gpt-4o --print
 
 AGENT=""
-TASK=""
 PROMPT=""
 DRY_RUN="false"
+LIST_PROFILES="false"
+PROFILE=""
 AGENT_ARGS=()
+PROFILE_FILES=()
+
+declare -A VISITING=()
+declare -A VISITED=()
 
 usage() {
-  echo "Usage: $0 --agent <pi|claude> [--task <text>] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
+  echo "Usage: $0 --agent <pi|claude> [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
 }
 
 require_value() {
@@ -34,11 +38,7 @@ resolve_path() {
   local p="$1"
   if command -v realpath >/dev/null 2>&1; then
     realpath "$p"
-  elif command -v python3 >/dev/null 2>&1; then
-    python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$p"
   else
-    # Best-effort fallback when neither realpath nor python3 is available.
-    # Return the input path so callers can continue without hard failure.
     echo "$p"
   fi
 }
@@ -71,6 +71,80 @@ warn_skills_link() {
   fi
 }
 
+require_yq() {
+  if ! command -v yq >/dev/null 2>&1; then
+    echo "yq is required to parse profiles YAML." >&2
+    exit 1
+  fi
+}
+
+list_profiles() {
+  local config_file="$1"
+  yq -r '.profiles | keys | .[]' "$config_file"
+}
+
+profile_exists() {
+  local config_file="$1"
+  local name="$2"
+  NAME="$name" yq -r '.profiles[strenv(NAME)] | type' "$config_file"
+}
+
+resolve_profile() {
+  local config_file="$1"
+  local name="$2"
+
+  if [[ -n "${VISITED[$name]:-}" ]]; then
+    return
+  fi
+
+  if [[ -n "${VISITING[$name]:-}" ]]; then
+    echo "Cycle detected in profile inheritance at '$name'" >&2
+    exit 1
+  fi
+
+  local exists_type
+  exists_type="$(profile_exists "$config_file" "$name")"
+  if [[ "$exists_type" == "!!null" || "$exists_type" == "null" ]]; then
+    echo "Profile '$name' not found" >&2
+    exit 1
+  fi
+
+  VISITING["$name"]=1
+
+  local parent
+  parent="$(NAME="$name" yq -r '.profiles[strenv(NAME)].extends // ""' "$config_file")"
+  if [[ -n "$parent" ]]; then
+    resolve_profile "$config_file" "$parent"
+  fi
+
+  mapfile -t files < <(NAME="$name" yq -r '.profiles[strenv(NAME)].files[]?' "$config_file")
+  if [[ ${#files[@]} -gt 0 ]]; then
+    PROFILE_FILES+=("${files[@]}")
+  fi
+
+  unset VISITING["$name"]
+  VISITED["$name"]=1
+}
+
+resolve_profile_files() {
+  local config_file="$1"
+  local requested_profile="$2"
+
+  local selected_profile
+  if [[ -n "$requested_profile" ]]; then
+    selected_profile="$requested_profile"
+  else
+    selected_profile="$(yq -r '.default_profile // ""' "$config_file")"
+  fi
+
+  if [[ -z "$selected_profile" ]]; then
+    echo "No profile provided and default_profile missing in config" >&2
+    exit 1
+  fi
+
+  resolve_profile "$config_file" "$selected_profile"
+}
+
 print_dry_run() {
   local agent_name="$1"
   local skills_link="$2"
@@ -79,6 +153,12 @@ print_dry_run() {
   local -a cmd=("$@")
 
   echo "[dry-run] agent: $agent_name"
+  echo "[dry-run] profile: ${PROFILE:-<default>}"
+  echo "[dry-run] profiles config: $PROFILES_FILE"
+  echo "[dry-run] resolved context files:"
+  for f in "${RESOLVED_FILES[@]}"; do
+    echo "  - $f"
+  done
   echo "[dry-run] skills path: $skills_link"
   echo "[dry-run] expected skills target: $expected_target"
   echo "[dry-run] command: ${cmd[*]}"
@@ -96,10 +176,14 @@ while [[ $# -gt 0 ]]; do
       AGENT="$2"
       shift 2
       ;;
-    --task)
+    --profile)
       require_value "$1" "${2-}"
-      TASK="$2"
+      PROFILE="$2"
       shift 2
+      ;;
+    --list-profiles)
+      LIST_PROFILES="true"
+      shift
       ;;
     --dry-run)
       DRY_RUN="true"
@@ -139,11 +223,41 @@ if [[ -z "$AGENT" ]]; then
 fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CORE_FILE="$ROOT_DIR/agents/AGENTS.core.md"
 ALL_SKILLS_DIR="$ROOT_DIR/skills"
+PROFILES_FILE="$ROOT_DIR/agents/profiles.yaml"
 
-if [[ ! -f "$CORE_FILE" ]]; then
-  echo "Missing core file: $CORE_FILE" >&2
+if [[ ! -f "$PROFILES_FILE" ]]; then
+  echo "Missing profiles config: $PROFILES_FILE" >&2
+  exit 1
+fi
+
+require_yq
+
+if [[ "$LIST_PROFILES" == "true" ]]; then
+  list_profiles "$PROFILES_FILE"
+  exit 0
+fi
+
+resolve_profile_files "$PROFILES_FILE" "$PROFILE"
+
+declare -A SEEN=()
+RESOLVED_FILES=()
+for f in "${PROFILE_FILES[@]}"; do
+  [[ -n "$f" ]] || continue
+  abs="$ROOT_DIR/$f"
+  if [[ ! -f "$abs" ]]; then
+    echo "Context file not found: $f (resolved: $abs)" >&2
+    exit 1
+  fi
+  if [[ -n "${SEEN[$f]:-}" ]]; then
+    continue
+  fi
+  SEEN["$f"]=1
+  RESOLVED_FILES+=("$f")
+done
+
+if [[ ${#RESOLVED_FILES[@]} -eq 0 ]]; then
+  echo "No context files resolved. Check profile settings." >&2
   exit 1
 fi
 
@@ -153,15 +267,11 @@ trap 'rm -f "$CTX_FILE"' EXIT
 {
   echo "# Runtime Agent Context"
   echo
-  echo "## Core Instructions"
-  cat "$CORE_FILE"
-  echo
-
-  if [[ -n "$TASK" ]]; then
-    echo "## Task"
-    echo "$TASK"
+  for rel in "${RESOLVED_FILES[@]}"; do
+    echo "## Source: $rel"
+    cat "$ROOT_DIR/$rel"
     echo
-  fi
+  done
 } > "$CTX_FILE"
 
 case "$AGENT" in
