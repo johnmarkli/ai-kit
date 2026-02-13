@@ -58,11 +58,8 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
 - Ensure the working branch is updated with the latest main branch
 - Ensure the branch was not already merged - if it is, then create a new branch off of the latest main
 
-
 ### Git Commit messages
-
 - Use the Conventional Commits 1.0.0 format for all commits:
-
 ```text
 <type>[optional scope]: <description>
 
@@ -70,7 +67,6 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
 
 [optional footer(s)]
 ```
-
 Reference: https://www.conventionalcommits.org/en/v1.0.0/
 
 
