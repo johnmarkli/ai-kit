@@ -5,6 +5,7 @@ profiles:
       - agents/AGENTS.core.md
       - agents/AGENTS.tools.md
   ph:
+    extends: default
     files:
       - agents/AGENTS.org.ph.md
   ph-go:

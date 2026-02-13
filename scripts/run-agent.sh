@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ -z "${BASH_VERSINFO:-}" || "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+  echo "This script requires bash 4+ (found: ${BASH_VERSION:-unknown})." >&2
+  exit 1
+fi
+
 # Usage examples:
 #   ./scripts/run-agent.sh --agent pi -- "help me fix this"
 #   ./scripts/run-agent.sh --agent pi --profile go -- "fix failing go tests"
@@ -73,7 +78,7 @@ warn_skills_link() {
 
 require_yq() {
   if ! command -v yq >/dev/null 2>&1; then
-    echo "yq is required to parse profiles YAML." >&2
+    echo "yq is required to parse profiles YAML (v4 expected)." >&2
     exit 1
   fi
 }

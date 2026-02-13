@@ -30,7 +30,9 @@ This keeps instructions out of target repos and injects context only at runtime.
 chmod +x scripts/run-agent.sh
 ```
 
-Requirement: `yq` must be installed (used for parsing `agents/profiles.yaml`).
+Requirements:
+- `bash` 4+
+- `yq` v4 (used for parsing `agents/profiles.yaml`)
 
 ### Pi
 
@@ -55,6 +57,30 @@ Requirement: `yq` must be installed (used for parsing `agents/profiles.yaml`).
 ```bash
 ./scripts/run-agent.sh --agent pi --list-profiles
 ```
+
+### Profile inheritance (`extends`)
+
+Profiles can inherit other profiles and append files in order.
+
+```yaml
+profiles:
+  default:
+    files:
+      - agents/AGENTS.core.md
+      - agents/AGENTS.tools.md
+
+  ph:
+    extends: default
+    files:
+      - agents/AGENTS.org.ph.md
+
+  ph-ts:
+    extends: ph
+    files:
+      - agents/AGENTS.lang.ts.md
+```
+
+In this example, `ph-ts` resolves to: core + tools + org + typescript.
 
 ### Dry run (no launch)
 
