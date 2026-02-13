@@ -104,6 +104,12 @@ Use a second `--` to pass flags directly to `pi` or `claude`:
 ./scripts/run-agent.sh --agent claude -- "review this diff" -- --model sonnet --print
 ```
 
+If you want pass-through flags without a prompt, provide an empty prompt before the second `--`:
+
+```bash
+./scripts/run-agent.sh --agent pi --profile ph-ts -- "" -- --model claude-opus-4-6
+```
+
 Precedence note:
 - The wrapper always injects `--append-system-prompt` with composed context.
 - Your pass-through flags are appended after that.
