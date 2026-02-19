@@ -19,7 +19,7 @@ Minimal, repo-agnostic setup for reusable AI coding-agent context.
 3. Launches the selected agent with that context appended as system prompt (`--append-system-prompt`)
 4. For `pi`, relies on native skills discovery from `~/.pi/agent/skills`
 5. For `claude`, relies on native skills discovery from `~/.claude/skills`
-6. Warns if either skills symlink is missing/misconfigured
+6. Auto-creates a missing skills symlink and warns if it is misconfigured
 7. Cleans up the temp file automatically
 
 This keeps instructions out of target repos and injects context only at runtime.

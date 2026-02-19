@@ -87,9 +87,10 @@ warn_skills_link() {
   local expected_target="$3"
   local create_hint="$4"
 
-  if [[ ! -e "$skills_link" ]]; then
-    echo "Warning: $tool_name skills path missing: $skills_link" >&2
-    echo "Create it with: $create_hint" >&2
+  if [[ ! -e "$skills_link" && ! -L "$skills_link" ]]; then
+    mkdir -p "$(dirname "$skills_link")"
+    ln -sfn "$expected_target" "$skills_link"
+    echo "Info: created $tool_name skills symlink: $skills_link -> $expected_target" >&2
     return
   fi
 
@@ -106,6 +107,7 @@ warn_skills_link() {
 
   if [[ "$resolved_link_target" != "$resolved_expected_target" ]]; then
     echo "Warning: $skills_link points to '$resolved_link_target', expected '$resolved_expected_target'." >&2
+    echo "Recommended: $create_hint" >&2
   fi
 }
 
