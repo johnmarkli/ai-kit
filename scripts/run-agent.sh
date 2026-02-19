@@ -296,7 +296,7 @@ if [[ ${#RESOLVED_FILES[@]} -eq 0 ]]; then
   exit 1
 fi
 
-CTX_FILE="$(mktemp /tmp/agent-context.XXXXXX.md)"
+CTX_FILE="$(mktemp /tmp/agent-context.XXXXXX)"
 trap 'rm -f "$CTX_FILE"' EXIT
 
 {
