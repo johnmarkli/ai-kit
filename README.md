@@ -34,10 +34,11 @@ Requirements:
 - `bash` 4+
 - `yq` v4 (used for parsing `agents/profiles.yaml`)
 
-### Pi
+### Pi (default)
 
 ```bash
-./scripts/run-agent.sh --agent pi -- "help me fix this"
+./scripts/run-agent.sh -- "help me fix this"
+# equivalent: ./scripts/run-agent.sh --agent pi -- "help me fix this"
 ```
 
 ### Claude

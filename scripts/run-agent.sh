@@ -7,14 +7,14 @@ if [[ -z "${BASH_VERSINFO:-}" || "${BASH_VERSINFO[0]}" -lt 3 ]]; then
 fi
 
 # Usage examples:
-#   ./scripts/run-agent.sh --agent pi -- "help me fix this"
+#   ./scripts/run-agent.sh -- "help me fix this"               # defaults to --agent pi
 #   ./scripts/run-agent.sh --agent pi --profile go -- "fix failing go tests"
 #   ./scripts/run-agent.sh --agent claude --list-profiles
 #
 # Pass-through flags to underlying agent:
 #   ./scripts/run-agent.sh --agent pi --profile go -- "help" -- --model openai/gpt-4o --print
 
-AGENT=""
+AGENT="pi"
 PROMPT=""
 DRY_RUN="false"
 LIST_PROFILES="false"
@@ -59,7 +59,7 @@ _set_remove() {
 }
 
 usage() {
-  echo "Usage: $0 --agent <pi|claude> [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
+  echo "Usage: $0 [--agent <pi|claude>] [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
 }
 
 require_value() {
@@ -256,11 +256,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ -z "$AGENT" ]]; then
-  usage
-  exit 1
-fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ALL_SKILLS_DIR="$ROOT_DIR/skills"
