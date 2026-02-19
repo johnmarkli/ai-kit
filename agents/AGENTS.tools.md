@@ -13,6 +13,7 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
 ## File and code operations
 
 ### Explore and locate
+- Before exploring, always make sure code is up to date with the latest on the remote
 - Use `bash` with fast search tools:
   - `rg` for text search
   - `find` for paths
