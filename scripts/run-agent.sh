@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ -z "${BASH_VERSINFO:-}" || "${BASH_VERSINFO[0]}" -lt 4 ]]; then
-  echo "This script requires bash 4+ (found: ${BASH_VERSION:-unknown})." >&2
+if [[ -z "${BASH_VERSINFO:-}" || "${BASH_VERSINFO[0]}" -lt 3 ]]; then
+  echo "This script requires bash 3+ (found: ${BASH_VERSION:-unknown})." >&2
   exit 1
 fi
 
@@ -22,8 +22,41 @@ PROFILE=""
 AGENT_ARGS=()
 PROFILE_FILES=()
 
-declare -A VISITING=()
-declare -A VISITED=()
+_VISITING=""
+_VISITED=""
+
+_set_contains() {
+  local set="$1" key="$2" item
+  local IFS=":"
+  for item in $set; do
+    [[ "$item" == "$key" ]] && return 0
+  done
+  return 1
+}
+
+_set_add() {
+  local set="$1" key="$2"
+  if [[ -z "$set" ]]; then
+    echo "$key"
+  else
+    echo "$set:$key"
+  fi
+}
+
+_set_remove() {
+  local set="$1" key="$2"
+  local result="" item
+  local IFS=":"
+  for item in $set; do
+    [[ "$item" == "$key" ]] && continue
+    if [[ -z "$result" ]]; then
+      result="$item"
+    else
+      result="$result:$item"
+    fi
+  done
+  echo "$result"
+}
 
 usage() {
   echo "Usage: $0 --agent <pi|claude> [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
@@ -98,11 +131,11 @@ resolve_profile() {
   local config_file="$1"
   local name="$2"
 
-  if [[ -n "${VISITED[$name]:-}" ]]; then
+  if _set_contains "$_VISITED" "$name"; then
     return
   fi
 
-  if [[ -n "${VISITING[$name]:-}" ]]; then
+  if _set_contains "$_VISITING" "$name"; then
     echo "Cycle detected in profile inheritance at '$name'" >&2
     exit 1
   fi
@@ -114,7 +147,7 @@ resolve_profile() {
     exit 1
   fi
 
-  VISITING["$name"]=1
+  _VISITING="$(_set_add "$_VISITING" "$name")"
 
   local parent
   parent="$(NAME="$name" yq -r '.profiles[strenv(NAME)].extends // ""' "$config_file")"
@@ -122,13 +155,13 @@ resolve_profile() {
     resolve_profile "$config_file" "$parent"
   fi
 
-  mapfile -t files < <(NAME="$name" yq -r '.profiles[strenv(NAME)].files[]?' "$config_file")
-  if [[ ${#files[@]} -gt 0 ]]; then
-    PROFILE_FILES+=("${files[@]}")
-  fi
+  local line
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && PROFILE_FILES+=("$line")
+  done < <(NAME="$name" yq -r '.profiles[strenv(NAME)].files[]?' "$config_file")
 
-  unset VISITING["$name"]
-  VISITED["$name"]=1
+  _VISITING="$(_set_remove "$_VISITING" "$name")"
+  _VISITED="$(_set_add "$_VISITED" "$name")"
 }
 
 resolve_profile_files() {
@@ -208,7 +241,7 @@ while [[ $# -gt 0 ]]; do
       if [[ $SPLIT_INDEX -ge 0 ]]; then
         PROMPT_PARTS=("${REMAINING[@]:0:$SPLIT_INDEX}")
         AGENT_ARGS=("${REMAINING[@]:$((SPLIT_INDEX + 1))}")
-        PROMPT="${PROMPT_PARTS[*]}"
+        PROMPT="${PROMPT_PARTS[*]:-}"
       else
         PROMPT="${REMAINING[*]}"
       fi
@@ -245,7 +278,7 @@ fi
 
 resolve_profile_files "$PROFILES_FILE" "$PROFILE"
 
-declare -A SEEN=()
+_SEEN=""
 RESOLVED_FILES=()
 for f in "${PROFILE_FILES[@]}"; do
   [[ -n "$f" ]] || continue
@@ -254,10 +287,10 @@ for f in "${PROFILE_FILES[@]}"; do
     echo "Context file not found: $f (resolved: $abs)" >&2
     exit 1
   fi
-  if [[ -n "${SEEN[$f]:-}" ]]; then
+  if _set_contains "$_SEEN" "$f"; then
     continue
   fi
-  SEEN["$f"]=1
+  _SEEN="$(_set_add "$_SEEN" "$f")"
   RESOLVED_FILES+=("$f")
 done
 
