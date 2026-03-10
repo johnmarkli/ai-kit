@@ -15,3 +15,6 @@ Organization-specific defaults for this repository.
 
 - https://notion.so keeps shared documentation
 - use the `notion-cli` cli tool to interact with it
+
+## repo conventions
+- `make generate` to generate code

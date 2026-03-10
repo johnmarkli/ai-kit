@@ -35,6 +35,7 @@ Default guidance for working with Go (`.go`) code in this repository.
 - Prefer deterministic tests; avoid time/network flakes unless explicitly integration tests.
 - Run targeted tests first, then broader package/module tests.
 - For bugfixes, include a regression test when practical.
+- use `github.com/stretchr/testify/require` instead of `github.com/stretchr/testify/assert` for test assertions
 
 ## Project hygiene
 
