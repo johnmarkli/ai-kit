@@ -19,8 +19,9 @@ Minimal, repo-agnostic setup for reusable AI coding-agent context.
 3. Launches the selected agent with that context appended as system prompt (`--append-system-prompt`)
 4. For `pi`, relies on native skills discovery from `~/.pi/agent/skills`
 5. For `claude`, relies on native skills discovery from `~/.claude/skills`
-6. Auto-creates a missing skills symlink and warns if it is misconfigured
-7. Cleans up the temp file automatically
+6. For `omp`, relies on native skills discovery from `~/.omp/agent/skills`
+7. Auto-creates a missing skills symlink and warns if it is misconfigured
+8. Cleans up the temp file automatically
 
 This keeps instructions out of target repos and injects context only at runtime.
 
@@ -45,6 +46,12 @@ Requirements:
 
 ```bash
 ./scripts/run-agent.sh --agent claude -- "find root cause"
+```
+
+### Omp
+
+```bash
+./scripts/run-agent.sh --agent omp -- "review this diff"
 ```
 
 ### Select a profile
@@ -118,17 +125,19 @@ Precedence note:
 
 ## Skills symlink setup (shared source of truth)
 
-Point both tools to this repo's `skills/`:
+Point all three tools to this repo's `skills/`:
 
 ```bash
-mkdir -p ~/.pi/agent ~/.claude
+mkdir -p ~/.pi/agent ~/.claude ~/.omp/agent
 ln -sfn "$(pwd)/skills" ~/.pi/agent/skills
 ln -sfn "$(pwd)/skills" ~/.claude/skills
+ln -sfn "$(pwd)/skills" ~/.omp/agent/skills
 ```
 
 If you use a custom Pi agent dir, set `PI_CODING_AGENT_DIR` and symlink there instead.
+If you use a custom Omp agent dir, set `OMP_CODING_AGENT_DIR` and symlink there instead.
 
 ## Notes
 
-- Both `pi` and `claude` use native skills discovery via symlinked skills directories.
+- `pi`, `claude`, and `omp` all use native skills discovery via symlinked skills directories.
 - Add more skills under `skills/<skill-name>/SKILL.md`.

@@ -80,6 +80,11 @@ Reference: https://www.conventionalcommits.org/en/v1.0.0/
 - If remote repo task is GitHub: `gh`.
 - If remote repo task is GitLab: `glab`.
 
+## Other tools
+
+- `slack-cli` for slack
+- `pup` for datadog with env var DD_SITE=us3.datadoghq.com
+
 ## Safety and reliability
 
 - Always inspect before editing.

@@ -10,6 +10,7 @@ fi
 #   ./scripts/run-agent.sh -- "help me fix this"               # defaults to --agent pi
 #   ./scripts/run-agent.sh --agent pi --profile go -- "fix failing go tests"
 #   ./scripts/run-agent.sh --agent claude --list-profiles
+#   ./scripts/run-agent.sh --agent omp --profile ts -- "review this diff"
 #
 # Pass-through flags to underlying agent:
 #   ./scripts/run-agent.sh --agent pi --profile go -- "help" -- --model openai/gpt-4o --print
@@ -59,7 +60,7 @@ _set_remove() {
 }
 
 usage() {
-  echo "Usage: $0 [--agent <pi|claude>] [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
+  echo "Usage: $0 [--agent <pi|claude|omp>] [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
 }
 
 require_value() {
@@ -347,8 +348,27 @@ case "$AGENT" in
     "${CMD[@]}"
     ;;
 
+  omp)
+    OMP_AGENT_DIR="${OMP_CODING_AGENT_DIR:-$HOME/.omp/agent}"
+    OMP_SKILLS_LINK="$OMP_AGENT_DIR/skills"
+    OMP_CREATE_HINT="mkdir -p \"$OMP_AGENT_DIR\" && ln -sfn \"$ALL_SKILLS_DIR\" \"$OMP_SKILLS_LINK\""
+
+    warn_skills_link "Omp" "$OMP_SKILLS_LINK" "$ALL_SKILLS_DIR" "$OMP_CREATE_HINT"
+
+    CMD=(omp --append-system-prompt "$(<"$CTX_FILE")")
+    [[ ${#AGENT_ARGS[@]} -gt 0 ]] && CMD+=("${AGENT_ARGS[@]}")
+    [[ -n "$PROMPT" ]] && CMD+=("$PROMPT")
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+      print_dry_run "omp" "$OMP_SKILLS_LINK" "$ALL_SKILLS_DIR" "${CMD[@]}"
+      exit 0
+    fi
+
+    "${CMD[@]}"
+    ;;
+
   *)
-    echo "Unsupported agent: $AGENT (expected: pi|claude)" >&2
+    echo "Unsupported agent: $AGENT (expected: pi|claude|omp)" >&2
     exit 1
     ;;
 esac
