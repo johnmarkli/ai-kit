@@ -60,7 +60,7 @@ _set_remove() {
 }
 
 usage() {
-  echo "Usage: $0 [--agent <pi|claude|omp>] [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
+  echo "Usage: $(basename "$0") [--agent <pi|claude|omp>] [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
 }
 
 require_value() {
@@ -258,7 +258,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Resolve the real script path, following symlinks (e.g. when installed on PATH).
+SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_SOURCE" ]]; do
+  LINK_TARGET="$(readlink "$SCRIPT_SOURCE")"
+  if [[ "$LINK_TARGET" == /* ]]; then
+    SCRIPT_SOURCE="$LINK_TARGET"
+  else
+    SCRIPT_SOURCE="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)/$LINK_TARGET"
+  fi
+done
+ROOT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")/.." && pwd)"
 ALL_SKILLS_DIR="$ROOT_DIR/skills"
 PROFILES_FILE="$ROOT_DIR/agents/profiles.yaml"
 

@@ -32,8 +32,41 @@ chmod +x scripts/run-agent.sh
 ```
 
 Requirements:
-- `bash` 4+
+- `bash` 3+
 - `yq` v4 (used for parsing `agents/profiles.yaml`)
+
+### Install as a CLI command (recommended)
+
+Install `run-agent` as a first-class command for the current user (symlinked into `~/.local/bin`):
+
+```bash
+./scripts/install.sh
+```
+
+Then run it from anywhere:
+
+```bash
+run-agent --list-profiles
+run-agent --agent pi -- "help me fix this"
+```
+
+Options:
+
+```bash
+./scripts/install.sh --name foo       # custom command name
+./scripts/install.sh --bin-dir DIR    # custom user-writable install dir
+./scripts/install.sh --uninstall      # remove the installed command
+```
+
+The installer warns if the target dir is not on your `PATH`. The script resolves
+the repo root through the symlink, so `run-agent` works regardless of the current
+directory.
+
+Manual alternative (no installer):
+
+```bash
+alias run-agent="$(pwd)/scripts/run-agent.sh"   # add to ~/.zshrc or ~/.bashrc
+```
 
 ### Pi (default)
 
