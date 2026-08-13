@@ -19,6 +19,7 @@ AGENT="pi"
 PROMPT=""
 DRY_RUN="false"
 LIST_PROFILES="false"
+EMIT_CONTEXT=""
 PROFILE=""
 AGENT_ARGS=()
 PROFILE_FILES=()
@@ -230,6 +231,11 @@ while [[ $# -gt 0 ]]; do
       DRY_RUN="true"
       shift
       ;;
+    --emit-context)
+      require_value "$1" "${2-}"
+      EMIT_CONTEXT="$2"
+      shift 2
+      ;;
     --)
       shift
       REMAINING=("$@")
@@ -319,6 +325,15 @@ trap 'rm -f "$CTX_FILE"' EXIT
     echo
   done
 } > "$CTX_FILE"
+
+# Write the composed context to a persistent path and exit (for external launchers,
+# e.g. `pi --append-system-prompt <path>`).
+if [[ -n "$EMIT_CONTEXT" ]]; then
+  mkdir -p "$(dirname "$EMIT_CONTEXT")"
+  cp "$CTX_FILE" "$EMIT_CONTEXT"
+  echo "$EMIT_CONTEXT"
+  exit 0
+fi
 
 case "$AGENT" in
   pi)

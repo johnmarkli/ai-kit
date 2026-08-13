@@ -83,7 +83,6 @@ Reference: https://www.conventionalcommits.org/en/v1.0.0/
 ## Other tools
 
 - `slack-cli` for slack
-- `pup` for datadog with env var DD_SITE=us3.datadoghq.com
 
 ## Safety and reliability
 
