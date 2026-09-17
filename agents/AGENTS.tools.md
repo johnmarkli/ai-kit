@@ -82,7 +82,7 @@ Reference: https://www.conventionalcommits.org/en/v1.0.0/
 
 ## Other tools
 
-- `slack-cli` for slack
+- `slackcli` for slack
 
 ## Safety and reliability
 
