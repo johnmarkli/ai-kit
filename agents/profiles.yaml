@@ -21,6 +21,10 @@ profiles:
     extends: ph
     files:
       - agents/AGENTS.lang.ts.md
+  indigo:
+    extends: default
+    files:
+      - agents/AGENTS.org.indigo.md
   go:
     extends: default
     files:
