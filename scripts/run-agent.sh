@@ -14,10 +14,14 @@ fi
 #
 # Pass-through flags to underlying agent:
 #   ./scripts/run-agent.sh --agent pi --profile go -- "help" -- --model openai/gpt-4o --print
+#
+# pi is updated (`pi update --all`: pi + installed packages) before launch.
+# Skip with --no-update or RUN_AGENT_NO_UPDATE=1.
 
 AGENT="pi"
 PROMPT=""
 DRY_RUN="false"
+NO_UPDATE="${RUN_AGENT_NO_UPDATE:-}"
 LIST_PROFILES="false"
 EMIT_CONTEXT=""
 PROFILE=""
@@ -61,7 +65,7 @@ _set_remove() {
 }
 
 usage() {
-  echo "Usage: $(basename "$0") [--agent <pi|claude|omp>] [--profile <name>] [--list-profiles] [--dry-run] [-- <prompt> [-- <agent flags...>]]" >&2
+  echo "Usage: $(basename "$0") [--agent <pi|claude|omp>] [--profile <name>] [--list-profiles] [--dry-run] [--no-update] [-- <prompt> [-- <agent flags...>]]" >&2
 }
 
 require_value() {
@@ -231,6 +235,10 @@ while [[ $# -gt 0 ]]; do
       DRY_RUN="true"
       shift
       ;;
+    --no-update)
+      NO_UPDATE="1"
+      shift
+      ;;
     --emit-context)
       require_value "$1" "${2-}"
       EMIT_CONTEXT="$2"
@@ -350,6 +358,13 @@ case "$AGENT" in
     if [[ "$DRY_RUN" == "true" ]]; then
       print_dry_run "pi" "$PI_SKILLS_LINK" "$ALL_SKILLS_DIR" "${CMD[@]}"
       exit 0
+    fi
+
+    # Update pi + installed packages before launch; never block launch on failure
+    # (e.g. offline).
+    if [[ -z "$NO_UPDATE" ]]; then
+      echo "Updating pi + extensions (skip with --no-update)..." >&2
+      pi update --all >&2 || echo "Warning: pi update failed; launching anyway." >&2
     fi
 
     "${CMD[@]}"
