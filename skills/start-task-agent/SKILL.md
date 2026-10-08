@@ -22,6 +22,7 @@ The mechanical part is `scripts/start-task-agent.sh`, next to this file. Your jo
 - **Profile:** use the user's choice, or pick from `run-agent --list-profiles` by matching the repo (e.g. `~/indigo/*` → `indigo`). If it's unclear, ask.
 - **Source material:** fetch the ticket in full (Linear `linear_get_issue`, `gh issue view`, Slack thread, etc.). Include the comments, not just the title.
 - **Branch name:** follow the repo convention. For a Linear ticket, use its `branchName`, or a shorter `<user>/<ticket-lower>-<slug>`. Check that it doesn't already exist.
+- **Workspace label:** `<TICKET-ID> <3-5 word desc>`, e.g. `GET-4050 fix appt dedupe`. This is the herdr workspace name, so keep it short (≤ ~40 chars), lowercase the description, and keep the ticket ID uppercase. With no ticket, use just the short description.
 
 ## 2. Write the prompt file
 Write it to `/tmp/<branch-with-slashes-as-dashes>/prompt.md`. Use this template and keep it tight:
@@ -55,7 +56,7 @@ Don't put secrets or PHI in the file. Refer to IDs, not patient data.
 ## 3. Launch
 ```bash
 ~/dev/ai-kit/skills/start-task-agent/scripts/start-task-agent.sh \
-  --repo "$REPO" --branch "$BRANCH" --label "<short-label e.g. get-4050>" \
+  --repo "$REPO" --branch "$BRANCH" --label "<TICKET-ID> <short desc>" \
   --profile "$PROFILE" --prompt-file "$PROMPT_FILE"
 ```
 Options:
@@ -63,9 +64,10 @@ Options:
 - `--remote` (default: `fork` if that remote exists, else `origin`)
 - `--base <ref>` (default: `<remote>/<default-branch>`)
 - `--focus` (switch to the new workspace)
-- `--dry-run` (print what would run)
+- `--dry-run` (print what would run, including the resolved label)
+- `--label` is optional: it defaults to a name built from the branch (`johnli/get-4050-fix-appt-dedupe` → `GET-4050 fix appt dedupe`). Pass it explicitly when the branch slug reads badly.
 
-The script prints JSON with `workspace_id`, `pane_id`, `worktree`, `branch`, and `base_sha`.
+The script prints JSON with `workspace_id`, `label`, `pane_id`, `worktree`, `branch`, and `base_sha`.
 
 ## 4. Check startup
 ```bash

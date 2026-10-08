@@ -6,10 +6,37 @@
 #       [--profile <name>] [--agent <pi|claude|omp>] [--label <text>] \
 #       [--remote <name>] [--base <ref>] [--focus] [--dry-run]
 #
+# --label is the herdr workspace name. Default: derived from the branch as
+# "<TICKET-ID> <short desc>", e.g. johnli/get-4050-fix-appt-dedupe -> "GET-4050 fix appt dedupe".
+#
 # Prints a JSON summary (workspace, pane, worktree path, branch) on success.
 set -euo pipefail
 
 die() { echo "start-task-agent: $*" >&2; exit 1; }
+
+# Keep whole words up to $2 chars (first word is hard-cut if it alone is too long).
+shorten() {
+  local out="" cand w max="$2"
+  for w in $1; do
+    if [ -z "$out" ]; then cand="$w"; else cand="$out $w"; fi
+    [ "${#cand}" -gt "$max" ] && break
+    out="$cand"
+  done
+  [ -n "$out" ] || out="${1:0:$max}"
+  printf '%s' "$out"
+}
+
+# Branch -> "<TICKET-ID> <short desc>"; falls back to the branch basename if no ticket ID.
+label_from_branch() {
+  local name="${1##*/}" ticket rest
+  if [[ "$name" =~ ([A-Za-z]+-[0-9]+)[-_]?(.*)$ ]]; then
+    ticket="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')"
+    rest="$(shorten "$(printf '%s' "${BASH_REMATCH[2]}" | tr '_-' '  ')" 30)"
+    printf '%s' "$ticket${rest:+ $rest}"
+  else
+    shorten "$(printf '%s' "$name" | tr '_-' '  ')" 40
+  fi
+}
 
 REPO="" BRANCH="" PROMPT_FILE="" PROFILE="default" AGENT="pi" LABEL=""
 REMOTE="" BASE="" FOCUS="--no-focus" DRY_RUN=0
@@ -50,7 +77,7 @@ if [ -z "$BASE" ]; then
   default_branch="$(git -C "$REPO" symbolic-ref --quiet --short "refs/remotes/$REMOTE/HEAD" 2>/dev/null | sed "s#^$REMOTE/##" || true)"
   BASE="$REMOTE/${default_branch:-main}"
 fi
-LABEL="${LABEL:-$BRANCH}"
+LABEL="${LABEL:-$(label_from_branch "$BRANCH")}"
 
 if git -C "$REPO" show-ref --verify --quiet "refs/heads/$BRANCH"; then
   die "branch already exists: $BRANCH (pick another name or open the existing worktree with 'herdr worktree open')"
@@ -61,7 +88,8 @@ printf -v AGENT_CMD 'run-agent --agent %q --profile %q -- "$(cat %q)"' "$AGENT" 
 if [ "$DRY_RUN" = 1 ]; then
   echo "repo:    $REPO"
   echo "fetch:   git fetch $REMOTE ${BASE#"$REMOTE"/}"
-  echo "create:  herdr worktree create --cwd $REPO --branch $BRANCH --base $BASE --label $LABEL $FOCUS"
+  echo "label:   $LABEL"
+  echo "create:  herdr worktree create --cwd $REPO --branch $BRANCH --base $BASE --label \"$LABEL\" $FOCUS"
   echo "run:     $AGENT_CMD"
   exit 0
 fi
@@ -78,7 +106,7 @@ wt_path="$(jq -r '.result.worktree.path // empty' <<<"$wt_json")"
 sleep 2
 herdr pane run "$pane_id" "$AGENT_CMD" >/dev/null
 
-jq -n --arg ws "$ws_id" --arg pane "$pane_id" --arg path "$wt_path" --arg branch "$BRANCH" \
+jq -n --arg ws "$ws_id" --arg label "$LABEL" --arg pane "$pane_id" --arg path "$wt_path" --arg branch "$BRANCH" \
   --arg base "$BASE" --arg base_sha "$(git -C "$REPO" rev-parse --short "$BASE")" \
   --arg profile "$PROFILE" --arg agent "$AGENT" --arg prompt "$PROMPT_FILE" \
-  '{workspace_id:$ws, pane_id:$pane, worktree:$path, branch:$branch, base:$base, base_sha:$base_sha, agent:$agent, profile:$profile, prompt_file:$prompt}'
+  '{workspace_id:$ws, label:$label, pane_id:$pane, worktree:$path, branch:$branch, base:$base, base_sha:$base_sha, agent:$agent, profile:$profile, prompt_file:$prompt}'
