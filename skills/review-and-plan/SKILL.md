@@ -38,8 +38,17 @@ directory, not a hardcoded checkout location.
 
 ## 2. Prepare the handoff
 
-Create a private unique directory under `/tmp/review-and-plan/` (`umask 077` and
-`mktemp -d /tmp/review-and-plan/handoff.XXXXXXXX`). Write two files:
+Use the same checked per-user root as the launcher before writing private context:
+
+```bash
+set -e
+TEMP_ROOT="$(bash <skill-dir>/scripts/private-temp-root.sh)"
+HANDOFF_DIR="$(umask 077; mktemp -d "$TEMP_ROOT/handoff.XXXXXXXX")"
+```
+
+The helper creates or validates `/tmp/review-and-plan-$UID`: a real, caller-owned
+`0700` directory. Stop if it rejects an existing path; never follow symlinks or
+repair permissions/ownership to bypass it. Write two files in `$HANDOFF_DIR`:
 
 **`context.md`:** carry forward additional applicable instructions from the current
 agent that aren't already supplied by `run-agent --profile indigo` or repository
@@ -153,31 +162,18 @@ herdr agent prompt "$PANE_ID" "$(<"$PROMPT_FILE")" --wait --timeout 120000
 
 ## 5. Verify and plan here
 
-Apply `../plan-review-response/SKILL.md` starting at **Check the review is current**;
-use the explicit pane/report already collected, not its peer-discovery script.
+Follow `../plan-review-response/SKILL.md` from **Check the review is current**
+through its approval gate. It is canonical for finding verification, classification,
+response format, tests, and delivery planning. Apply only these workflow overrides:
 
-Recheck HEAD, worktree status, and recorded content hashes. If changed, identify
-stale findings and request a targeted re-review before presenting an actionable
-plan based on obsolete code. Do not launch a duplicate pane for recovery.
-
-Verify **every C and S finding** independently against code and callers. Preserve
-IDs. Classify each as valid, valid/out of scope, disagree, or needs a decision.
-For simplifications, confirm contracts and behavior remain intact; otherwise mark
-as needing investigation, not ready to delete. Distinguish mandatory fixes from
-optional cleanup, reconcile overlaps, and never simplify away a correctness fix
-or useful safeguard. Don't manufacture edits when both passes are clean.
-
-Present a concise plan with:
-
-1. Reviewer pane/model, reviewed SHA/scope, verdict, and freshness.
-2. **Required fixes** (C IDs): evidence, files/functions, proposed changes.
-3. **Recommended simplifications** (S IDs): reduction, safety evidence, separate
-   from behavior-changing fixes.
-4. **Tests and re-checks**: focused cases/paths; synthetic data only; distinguish
-   checks run from checks proposed.
-5. **Decisions / deferred / disputed**: account for all remaining findings.
-6. **Delivery**: proposed commit(s), repo gates, and eventual PR reply mapping IDs
-   to resolutions. No edits, comments, commits, or pushes yet.
-
-End by asking for approval, then stop. If approved later, implement only the agreed
-items using normal repository workflow. The reviewer itself remains review-only.
+- Use the explicit pane/report already collected, not peer discovery.
+- Also recheck recorded content hashes. If the snapshot changed, identify stale
+  findings and request a targeted re-review in the same pane before planning from
+  obsolete code; don't launch a duplicate pane.
+- Preserve **C/S IDs** throughout verification and response mapping. For S findings,
+  trace contracts/callers to confirm behavior is preserved; uncertain reductions
+  need investigation, not a deletion recommendation.
+- Split the plan into **Required fixes** and **Recommended simplifications**.
+  Reconcile overlaps without simplifying away correctness fixes or safeguards.
+- If both passes are clean, say so rather than manufacture edits. The reviewer
+  remains review-only even if implementation by the parent is later approved.

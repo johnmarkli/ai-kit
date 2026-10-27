@@ -119,9 +119,24 @@ else:
         self.assertEqual(data["pane_id"], "w1:p2")
         self.assertEqual(data["parent_pane_id"], "w1:p1")
         self.assertEqual(Path(data["prompt_file"]).read_text(), self.prompt.read_text())
-        self.assertEqual(Path(data["run_dir"]).stat().st_mode & 0o777, 0o700)
+        run_dir = Path(data["run_dir"])
+        self.assertEqual(run_dir.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(run_dir.parent, Path(f"/tmp/review-and-plan-{os.geteuid()}"))
+        self.assertEqual(run_dir.parent.stat().st_mode & 0o7777, 0o700)
         # Submission/wait is a separate agent step, never hidden in the launcher.
         self.assertFalse(any(c[:3] == ["herdr", "agent", "prompt"] for c in calls))
+
+    def test_root_validation_failure_prevents_copying_or_pane_creation(self):
+        # Deny the real root's mode check without changing a shared live directory.
+        find = self.bin / "find"
+        find.write_text('#!/bin/bash\nprintf \'["find"]\\n\' >> "$CALL_LOG"\n')
+        find.chmod(0o755)
+        result = self.run_script()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("0700", result.stderr)
+        self.assertNotIn("run_dir=", result.stderr)
+        self.assertIn(["find"], self.calls())
+        self.assertFalse(any(c[0] == "herdr" for c in self.calls()))
 
     def test_refuses_outside_herdr(self):
         self.env["HERDR_ENV"] = "0"

@@ -188,7 +188,9 @@ review automatically. The reviewer pane stays open for inspection.
 
 Requires `herdr`, `pi`, `jq`, `run-agent` (and its `yq` dependency), an available
 `openai/gpt-6.1-sol` model, and `gh` (`glab` for GitLab). Conversation snapshots and handoffs remain local under
-`/tmp/review-and-plan/`; they may contain private context. A session fork carries
+`/tmp/review-and-plan-$UID/`, a validated caller-owned `0700` directory. Existing
+symlink, foreign-owned, or non-private roots are rejected rather than repaired.
+These artifacts may contain private context. A session fork carries
 history; the skill also hands off runtime/profile rules explicitly, since system
 prompts and extension configuration aren't necessarily inherited.
 
@@ -197,6 +199,7 @@ Launcher checks (mocked commands; no live panes or paid model calls):
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skills/review-and-plan/tests -v
 bash -n skills/review-and-plan/scripts/start-review.sh
+bash -n skills/review-and-plan/scripts/private-temp-root.sh
 ```
 
 ## Notes

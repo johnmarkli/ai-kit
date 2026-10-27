@@ -34,8 +34,9 @@ awk '$1 == "openai" && $2 == "gpt-6.1-sol" { found=1 } END { exit !found }' <<<"
 # Never fork a file that the parent can still append to during reviewer startup.
 # Keep snapshots private: they contain conversation history and runtime instructions.
 umask 077
-mkdir -p /tmp/review-and-plan
-RUN_DIR="$(mktemp -d /tmp/review-and-plan/run.XXXXXXXX)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMP_ROOT="$(bash "$SCRIPT_DIR/private-temp-root.sh")"
+RUN_DIR="$(mktemp -d "$TEMP_ROOT/run.XXXXXXXX")"
 PANE=""
 on_exit() {
   local status=$?
