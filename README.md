@@ -170,6 +170,38 @@ ln -sfn "$(pwd)/skills" ~/.omp/agent/skills
 If you use a custom Pi agent dir, set `PI_CODING_AGENT_DIR` and symlink there instead.
 If you use a custom Omp agent dir, set `OMP_CODING_AGENT_DIR` and symlink there instead.
 
+## Peer review and response planning (pi + herdr)
+
+From a persistent pi session running inside herdr:
+
+```text
+/skill:review-and-plan
+```
+
+Forks the exact current conversation into a pi reviewer launched through
+`run-agent --profile indigo`, using `openai/gpt-6.1-sol` in a pane to the left,
+without taking focus. The reviewer
+runs correctness **and** behavior-preserving concision passes on the current PR.
+The original agent waits for both, verifies each finding, then proposes fixes and
+optional simplifications for approval. Neither agent implements or publishes the
+review automatically. The reviewer pane stays open for inspection.
+
+Requires `herdr`, `pi`, `jq`, `run-agent` (and its `yq` dependency), an available
+`openai/gpt-6.1-sol` model, and `gh` (`glab` for GitLab). Conversation snapshots and handoffs remain local under
+`/tmp/review-and-plan-$UID/`, a validated caller-owned `0700` directory. Existing
+symlink, foreign-owned, or non-private roots are rejected rather than repaired.
+These artifacts may contain private context. A session fork carries
+history; the skill also hands off runtime/profile rules explicitly, since system
+prompts and extension configuration aren't necessarily inherited.
+
+Launcher checks (mocked commands; no live panes or paid model calls):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skills/review-and-plan/tests -v
+bash -n skills/review-and-plan/scripts/start-review.sh
+bash -n skills/review-and-plan/scripts/private-temp-root.sh
+```
+
 ## Notes
 
 - `pi`, `claude`, and `omp` all use native skills discovery via symlinked skills directories.
