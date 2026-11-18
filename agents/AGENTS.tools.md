@@ -51,6 +51,7 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
   (supported by `pr create|edit|comment`, `issue create|comment`). Reference the file as
   `![alt](./shot.png)` in the body and it's rewritten to the uploaded URL. Repeat `--attach`
   for several files (max 50). Don't commit screenshots or upload them some other way.
+  Uploads get shareable public URLs: screenshots must not show secrets, PII, or PHI — use synthetic/dev data.
 
 ### GitLab repositories
 - Use `glab` for GitLab-specific operations when available:
@@ -58,11 +59,6 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
   - issue view/comment
   - pipeline status/actions
 - Prefer `glab` over raw API calls for GitLab tasks.
-
-### Linear
-- Never add subscribers to issues: omit `subscriberIds` on create/update
-  issue, document, and comment calls unless the user names who to subscribe.
-- Don't @-mention people in issue or comment bodies unless asked (mentions auto-subscribe them).
 
 ### Create a Pull Request (PR) or Merge Request (MR)
 - Ensure the working branch is updated with the latest main branch
@@ -92,6 +88,10 @@ Reference: https://www.conventionalcommits.org/en/v1.0.0/
 ## Other tools
 
 - `slackcli` for slack
+
+### Linear
+- Don't add subscribers to Linear issues (e.g. `subscriberIds` on tool calls) unless the user names who to subscribe.
+- Don't @-mention people in issue or comment bodies unless asked (mentions auto-subscribe them).
 
 ## Safety and reliability
 
