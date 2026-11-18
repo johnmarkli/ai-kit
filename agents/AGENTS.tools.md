@@ -47,6 +47,11 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
   - issue view/comment
   - workflow run/status checks
 - Prefer `gh` over raw API calls for GitHub tasks.
+- To include screenshots/videos in PRs, issues, or comments, use `gh ... --attach '<file>#<alt text>'`
+  (supported by `pr create|edit|comment`, `issue create|comment`). Reference the file as
+  `![alt](./shot.png)` in the body and it's rewritten to the uploaded URL. Repeat `--attach`
+  for several files (max 50). Don't commit screenshots or upload them some other way.
+  Uploads get shareable public URLs: screenshots must not show secrets, PII, or PHI — use synthetic/dev data.
 
 ### GitLab repositories
 - Use `glab` for GitLab-specific operations when available:
@@ -83,6 +88,10 @@ Reference: https://www.conventionalcommits.org/en/v1.0.0/
 ## Other tools
 
 - `slackcli` for slack
+
+### Linear
+- Don't add subscribers to Linear issues (e.g. `subscriberIds` on tool calls) unless the user names who to subscribe.
+- Don't @-mention people in issue or comment bodies unless asked (mentions auto-subscribe them).
 
 ## Safety and reliability
 
