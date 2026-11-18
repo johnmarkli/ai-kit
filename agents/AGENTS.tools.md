@@ -47,6 +47,10 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
   - issue view/comment
   - workflow run/status checks
 - Prefer `gh` over raw API calls for GitHub tasks.
+- To include screenshots/videos in PRs, issues, or comments, use `gh ... --attach '<file>#<alt text>'`
+  (supported by `pr create|edit|comment`, `issue create|comment`). Reference the file as
+  `![alt](./shot.png)` in the body and it's rewritten to the uploaded URL. Repeat `--attach`
+  for several files (max 50). Don't commit screenshots or upload them some other way.
 
 ### GitLab repositories
 - Use `glab` for GitLab-specific operations when available:
@@ -54,6 +58,11 @@ Use the right tool for the job. Prefer safe, inspectable, and minimal-change wor
   - issue view/comment
   - pipeline status/actions
 - Prefer `glab` over raw API calls for GitLab tasks.
+
+### Linear
+- Never add subscribers to issues: omit `subscriberIds` on create/update
+  issue, document, and comment calls unless the user names who to subscribe.
+- Don't @-mention people in issue or comment bodies unless asked (mentions auto-subscribe them).
 
 ### Create a Pull Request (PR) or Merge Request (MR)
 - Ensure the working branch is updated with the latest main branch
