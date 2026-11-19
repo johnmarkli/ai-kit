@@ -44,7 +44,7 @@ with open(os.environ['CALL_LOG'], 'a') as f:
 if name == 'pi':
     print('provider model context')
     if not os.environ.get('NO_MODEL'):
-        print('openai gpt-6.1-sol 272K')
+        print('openai gpt-6.2-sol 272K')
 elif args[:2] == ['pane', 'split']:
     print(json.dumps({'result': {'pane': {'pane_id': 'w1:p2'}}}))
 elif args[:2] == ['pane', 'run'] and os.environ.get('FAIL_START'):
@@ -108,7 +108,7 @@ else:
         self.assertFalse(any(c[:3] == ["herdr", "agent", "start"] for c in calls))
         self.assertEqual(data["profile"], "indigo")
         self.assertEqual(data["launch_status"], "queued")
-        self.assertEqual(native[native.index("--model") + 1], "openai/gpt-6.1-sol")
+        self.assertEqual(native[native.index("--model") + 1], "openai/gpt-6.2-sol")
         snapshot = Path(native[native.index("--fork") + 1])
         self.assertNotEqual(snapshot, self.session)
         self.assertEqual(snapshot.read_bytes(), self.session.read_bytes())

@@ -27,9 +27,9 @@ done
 for cmd in herdr pi jq run-agent; do
   command -v "$cmd" >/dev/null || die "$cmd not on PATH"
 done
-models="$(pi --list-models gpt-6.1-sol)"
-awk '$1 == "openai" && $2 == "gpt-6.1-sol" { found=1 } END { exit !found }' <<<"$models" ||
-  die "openai/gpt-6.1-sol is unavailable; no fallback model will be selected"
+models="$(pi --list-models gpt-6.2-sol)"
+awk '$1 == "openai" && $2 == "gpt-6.2-sol" { found=1 } END { exit !found }' <<<"$models" ||
+  die "openai/gpt-6.2-sol is unavailable; no fallback model will be selected"
 
 # Never fork a file that the parent can still append to during reviewer startup.
 # Keep snapshots private: they contain conversation history and runtime instructions.
@@ -58,7 +58,7 @@ herdr pane swap --source-pane "$HERDR_PANE_ID" --target-pane "$PANE" >/dev/null
 # Skip wrapper updates so startup doesn't change installed packages mid-review.
 CMD=(run-agent --profile indigo --agent pi --no-update -- "" --
   --fork "$RUN_DIR/parent.jsonl"
-  --model openai/gpt-6.1-sol
+  --model openai/gpt-6.2-sol
   --append-system-prompt "$RUN_DIR/context.md")
 printf -v command '%q ' "${CMD[@]}"
 herdr pane run "$PANE" "$command" >/dev/null
@@ -67,5 +67,5 @@ herdr pane run "$PANE" "$command" >/dev/null
 jq -n --arg pane "$PANE" --arg parent "$HERDR_PANE_ID" \
   --arg dir "$RUN_DIR" --arg cwd "$PWD" \
   '{pane_id:$pane, parent_pane_id:$parent, agent:"pi", profile:"indigo", cwd:$cwd,
-    launch_status:"queued", model:"openai/gpt-6.1-sol", run_dir:$dir,
+    launch_status:"queued", model:"openai/gpt-6.2-sol", run_dir:$dir,
     prompt_file:($dir + "/prompt.md")}'
