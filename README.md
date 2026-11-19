@@ -179,7 +179,7 @@ From a persistent pi session running inside herdr:
 ```
 
 Forks the exact current conversation into a pi reviewer launched through
-`run-agent --profile indigo`, using `openai/gpt-6.1-sol` in a pane to the left,
+`run-agent --profile indigo`, using `openai/gpt-6.2-sol` in a pane to the left,
 without taking focus. The reviewer
 runs correctness **and** behavior-preserving concision passes on the current PR.
 The original agent waits for both, verifies each finding, then proposes fixes and
@@ -187,7 +187,7 @@ optional simplifications for approval. Neither agent implements or publishes the
 review automatically. The reviewer pane stays open for inspection.
 
 Requires `herdr`, `pi`, `jq`, `run-agent` (and its `yq` dependency), an available
-`openai/gpt-6.1-sol` model, and `gh` (`glab` for GitLab). Conversation snapshots and handoffs remain local under
+`openai/gpt-6.2-sol` model, and `gh` (`glab` for GitLab). Conversation snapshots and handoffs remain local under
 `/tmp/review-and-plan-$UID/`, a validated caller-owned `0700` directory. Existing
 symlink, foreign-owned, or non-private roots are rejected rather than repaired.
 These artifacts may contain private context. A session fork carries

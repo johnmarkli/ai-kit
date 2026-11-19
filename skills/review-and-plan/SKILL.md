@@ -1,6 +1,6 @@
 ---
 name: review-and-plan
-description: Open a pi reviewer using openai/gpt-6.1-sol in a herdr pane to the left, fork the current pi conversation, run correctness and concision reviews of the current PR, wait for both passes, then verify findings and plan a response without implementing. Use when asked to launch a peer review and plan fixes, or review and simplify the current PR with another agent. Requires pi inside herdr.
+description: Open a pi reviewer using openai/gpt-6.2-sol in a herdr pane to the left, fork the current pi conversation, run correctness and concision reviews of the current PR, wait for both passes, then verify findings and plan a response without implementing. Use when asked to launch a peer review and plan fixes, or review and simplify the current PR with another agent. Requires pi inside herdr.
 ---
 
 # Review and Plan
@@ -105,7 +105,7 @@ and queues this wrapper command through `herdr pane run`:
 
 ```bash
 run-agent --profile indigo --agent pi --no-update -- "" -- \
-  --fork <run_dir>/parent.jsonl --model openai/gpt-6.1-sol \
+  --fork <run_dir>/parent.jsonl --model openai/gpt-6.2-sol \
   --append-system-prompt <run_dir>/context.md
 ```
 
